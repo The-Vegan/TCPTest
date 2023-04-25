@@ -31,9 +31,21 @@ namespace TCPTest
             {
                 case "C":
                 case "c":
-                    Console.WriteLine("Enter IP");
-                    input = Console.ReadLine();
-                    client = new LocalClient(input);
+                    do
+                    {
+                        try
+                        {
+                            Console.WriteLine("Enter IP");
+                            input = Console.ReadLine();
+                            client = new LocalClient(input);
+                        }
+                        catch (Exception) 
+                        { 
+                            Console.WriteLine("Connexion failed");
+                            continue; 
+                        }
+                    } while (false);
+                    
                     break;
                     
                 case "S":
