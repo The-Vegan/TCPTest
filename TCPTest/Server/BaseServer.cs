@@ -26,7 +26,7 @@ namespace TCPTest.Server
         public delegate void ClientConnected(object sender,byte id);
         public event ClientConnected ClientConnectedEvent = delegate { };
 
-        public delegate void ClientDisconnected(object sender);
+        public delegate void ClientDisconnected(object sender,byte clientID);
         public event ClientDisconnected ClientDisconnectedEvent = delegate { };
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
         //Events
@@ -88,7 +88,12 @@ namespace TCPTest.Server
 
             for(byte i = 0; i < streams.Length; ++i)
             {
-                if (streams[i] == Sender) { streams[i] = null; GC.Collect(); return; }
+                if (streams[i] == Sender) 
+                { streams[i] = null;
+                    GC.Collect(); 
+                    ClientDisconnectedEvent(this, (byte)(i+1));
+                    return; 
+                }
             }
         }
 
@@ -134,6 +139,11 @@ namespace TCPTest.Server
                 if (streams[14] != null) streams[14].Write(data);
                 if (streams[15] != null) streams[15].Write(data);
             }
+        }
+
+        public NetworkStream GetStream(byte idx)
+        {
+            return streams[idx].GetStream();
         }
     }
 }

@@ -9,13 +9,15 @@ namespace TCPTest.Client
 {
     public class LocalClient
     {
+        public bool connected = false;
+
         private BaseClient client;
 
         private byte clientID = 0;
 
         PlayerInfo[] players = new PlayerInfo[16];
 
-        public delegate void UpdateNameList(string[] names);
+        public delegate void UpdateNameList(PlayerInfo[] names);
         public event UpdateNameList UpdateNameListInMenu= delegate {};
         //Packet Constants
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
@@ -43,6 +45,7 @@ namespace TCPTest.Client
         {
             client = new BaseClient();
             client.ConnectToServer(ip, 1404);
+            connected = true;
             Console.WriteLine("[LocalClient] Connected to server successfully");
             client.DataRecievedEvent += DataRecived;
         }
@@ -65,30 +68,13 @@ namespace TCPTest.Client
                     break;
                 case SEND_NAME_LIST:
                     Console.WriteLine("[LocalClient] SEND_NAME_LIST recieved");
-                    string[] nameList = new string[16];
-                    byte nmbOfNames = data[1];
-                    ushort offset = 2;
-                    for(byte i = 0; i < nmbOfNames; i++)
-                    {
-                        byte id = data[offset];
-                        offset++;
-
-                        if (id > 16) return;
-
-                        byte lengthOfName = data[offset];
-                        offset++;
-
-                        string name = Encoding.Unicode.GetString(data, offset,lengthOfName);
-                        offset += lengthOfName;
-
-                        nameList[id - 1] = name;
-                    }
-                    UpdateNameListInMenu(nameList);
+                    players = PlayerInfo.DeserialiseInfoArray(data);
+                    UpdateNameListInMenu(players);
                     Console.WriteLine("[LocalClient] NameList Decoded");
-                    for(byte i = 0; i < nameList.Length; i++)
+                    for(byte i = 0; i < players.Length; i++)
                     {
-                        if (nameList[i] == null) Console.WriteLine((i + 1) + "not connected");
-                        else Console.WriteLine((i + 1) + nameList[i]);
+                        if (players[i].name == null) Console.WriteLine((i + 1) + "not connected");
+                        else Console.WriteLine((i + 1) + players[i].name);
                     }
                     break;
                 case SET_LEVEL_CONFIG:
@@ -105,27 +91,21 @@ namespace TCPTest.Client
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
         public void ChangeName(string name)
         {
-            SendCharIDAndName(clientID,0,name);
+            SendCharIDAndName(name);
         }
 
-        public void SendCharIDAndName(byte clientID,byte charID,string name)
+        public void SendCharIDAndName(string name)
         {
             if (name.Length > 24) return;
 
-            byte[] stream = new byte[8_192];
-            stream[0] = SET_CHARACTER;
-            stream[1] = clientID;
-            stream[2] = charID;
-            stream[3] = (byte)name.Length;
-            byte[] nameAsByte = Encoding.Unicode.GetBytes(name);
-            for(byte i = 0;  i < nameAsByte.Length; i++)
-            {
-                stream[3 + i] = nameAsByte[i];
-            }
+            players[clientID - 1].name = name;
 
+            byte[] stream = players[clientID].ToByte();
+
+            client.SendDataToServer(stream);
         }
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
         //Menu
-        public void Disconnect() { client.Disconnect(); }
+        public void Disconnect() { client.Disconnect(); connected = false; }
     }
 }

@@ -5,12 +5,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TCPTest.Client;
 
 namespace TCPTest.Server
 {
     public class HostServer
     {
-        BaseServer server;
+        private BaseServer server;
+
+        private PlayerInfo[] players = new PlayerInfo[16];
 
         public HostServer() 
         {
@@ -19,6 +22,8 @@ namespace TCPTest.Server
             server.ClientConnectedEvent += Connected;
             server.ClientDisconnectedEvent += Disconnected;
             server.DataRecievedEvent += DataRecieved;
+
+            for(byte i = 0; i < players.Length; i++) players[i] = new PlayerInfo();  
 
         }
         //Packet Constants
@@ -50,6 +55,8 @@ namespace TCPTest.Server
 
         private void DataRecieved(object sender, byte[] data, NetworkStream stream)
         {
+            if (server.GetStream(data[1]) != stream) Console.WriteLine("[HostServer] Stream doesn't match with corresponding ID : " + data[1]);
+
             switch (data[0]) 
             {
                 case MOVE:
@@ -57,14 +64,27 @@ namespace TCPTest.Server
                     break;
                 case SET_CHARACTER:
                     Console.WriteLine("[HostServer] SET_CHARACTER recieved");
+
+                    byte id = data[1];
+                    players[id - 1].clientID = id;
+                    players[id - 1].characterID = data[2];
+                    byte nameLength = (byte)(data[3] * 2);
+                    string name = Encoding.Unicode.GetString(data, 4, nameLength);
+                    players[id - 1].name = name;
+
                     break;
                     
             }
         }
 
-        private void Disconnected(object sender)
+        private void UpdateNameList()
         {
-            Console.WriteLine("[HostServer] Client Disconnected");
+
+        }
+
+        private void Disconnected(object sender, byte clientID)
+        {
+            Console.WriteLine("[HostServer] Client "+ clientID+" Disconnected");
         }
 
         private void Connected(object sender, byte id)

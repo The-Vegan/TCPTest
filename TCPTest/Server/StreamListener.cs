@@ -13,6 +13,7 @@ namespace TCPTest.Server
     public class StreamListener
     {
         private NetworkStream stream;
+        public NetworkStream GetStream() { return stream; }
 
         public delegate void Disconnected(StreamListener Sender);
         public event Disconnected DisconnectedEvent = delegate { };

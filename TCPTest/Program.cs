@@ -15,44 +15,64 @@ namespace TCPTest
 
         static void Main(string[] args)
         {
-            AppDomain.CurrentDomain.ProcessExit += delegate 
+            AppDomain.CurrentDomain.ProcessExit += delegate
             {
                 client?.Disconnect();
                 server?.Terminate();
-                client = null;
-                server = null;
-                GC.Collect();
             };//When you close the console
-
-            Console.WriteLine("C -> client\nS -> server");
-            string input = Console.ReadLine();
-
-            switch (input)
+            while (true)
             {
-                case "C":
-                case "c":
-                    do
-                    {
+                Console.WriteLine("C -> client\nS -> server");
+                string input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "C":
+                    case "c":
                         try
                         {
                             Console.WriteLine("Enter IP");
                             input = Console.ReadLine();
                             client = new LocalClient(input);
                         }
-                        catch (Exception) 
-                        { 
+                        catch (Exception)
+                        {
                             Console.WriteLine("Connexion failed");
-                            continue; 
+                            continue;
                         }
-                    } while (false);
-                    
-                    break;
-                    
-                case "S":
-                case "s":
-                    server = new HostServer();
-                    break;
+
+                        while (input != "X")
+                        {
+                            Console.WriteLine("Enter \"X\" to disconnect\nEnter \"N\" to input a name");
+                            input = Console.ReadLine();
+                            if(input == "n" || input == "N")
+                            {
+                                Console.WriteLine("Enter your name");
+                                string name = Console.ReadLine();
+                                if (name != "") client.ChangeName(name);
+                            }
+                        }
+
+
+
+                        break;
+
+                    case "S":
+                    case "s":
+                        server = new HostServer();
+
+                        while (true)//Close Server
+                        {
+                            Console.WriteLine("Enter \"X\" to terminate server");
+                            input = Console.ReadLine();
+                            if (input == "x" || input == "X") break;
+                        }
+                        server.Terminate();
+
+                        break;
+                }
             }
+
 
         }
     }
