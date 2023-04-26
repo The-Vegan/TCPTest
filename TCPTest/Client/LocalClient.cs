@@ -71,11 +71,6 @@ namespace TCPTest.Client
                     players = PlayerInfo.DeserialiseInfoArray(data);
                     UpdateNameListInMenu(players);
                     Console.WriteLine("[LocalClient] NameList Decoded");
-                    for(byte i = 0; i < players.Length; i++)
-                    {
-                        if (players[i].name == null) Console.WriteLine((i + 1) + "not connected");
-                        else Console.WriteLine((i + 1) + players[i].name);
-                    }
                     break;
                 case SET_LEVEL_CONFIG:
                     Console.WriteLine("[LocalClient] SET_LEVEL_CONFIG recieved");

@@ -34,6 +34,7 @@ namespace TCPTest
                             Console.WriteLine("Enter IP");
                             input = Console.ReadLine();
                             client = new LocalClient(input);
+                            client.UpdateNameListInMenu += PrintPlayerList;
                         }
                         catch (Exception)
                         {
@@ -74,6 +75,15 @@ namespace TCPTest
             }
 
 
+        }
+
+        private static void PrintPlayerList(PlayerInfo[] players)
+        {
+            for (byte i = 0; i < players.Length; i++)
+            {
+                if (players[i].name == null) Console.WriteLine((i + 1) + " : not connected");
+                else Console.WriteLine((i + 1) + " : " + players[i].name);
+            }
         }
     }
 }
