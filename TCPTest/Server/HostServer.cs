@@ -29,6 +29,7 @@ namespace TCPTest.Server
         //Packet Constants
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
         /*CLIENT -> SERVER*/
+        private const byte PING = 0;
         private const byte MOVE = 1;
         private const byte SET_CHARACTER = 2;
         /*SERVER -> CLIENT*/
@@ -59,6 +60,10 @@ namespace TCPTest.Server
 
             switch (data[0]) 
             {
+                case PING:
+                    Console.WriteLine("[HostServer] PING recieved from " + data[1]);
+                    server.GetStream(data[1]).Write(data, 0, data.Length);
+                    break;
                 case MOVE:
                     Console.WriteLine("[HostServer] MOVE recieved");
                     break;

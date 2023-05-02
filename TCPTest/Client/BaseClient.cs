@@ -38,7 +38,7 @@ namespace TCPTest.Client
                 client.Connect(host, port);
                 stream = client.GetStream();
                 connected = true;
-                new Thread(new ThreadStart(InputRecievingThread)).Start();
+                new Thread(InputRecievingThread).Start();
             }
             catch (IOException) { }
         }//Connexion method

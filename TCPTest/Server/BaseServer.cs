@@ -42,7 +42,7 @@ namespace TCPTest.Server
                 }
             }//Finds local IP address
              
-            new Thread(new ThreadStart(ListeningThread)).Start();
+            new Thread(ListeningThread).Start();
         }
         public void Terminate()
         {

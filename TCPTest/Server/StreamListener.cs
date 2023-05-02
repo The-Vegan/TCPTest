@@ -25,7 +25,7 @@ namespace TCPTest.Server
         {
             this.stream = str;
 
-            new Thread(new ThreadStart(Listening)).Start();
+            new Thread(Listening).Start();
         }
         public void Close() { stream.Close(); }
         public void Listening()
