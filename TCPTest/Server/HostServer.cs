@@ -56,13 +56,13 @@ namespace TCPTest.Server
 
         private void DataRecieved(object sender, byte[] data, NetworkStream stream)
         {
-            if (server.GetStream(data[1]) != stream) Console.WriteLine("[HostServer] Stream doesn't match with corresponding ID : " + data[1]);
+            if (server.GetStream((byte)(data[1] - 1)) != stream) Console.WriteLine("[HostServer] Stream doesn't match with corresponding ID : " + data[1]);
 
             switch (data[0]) 
             {
                 case PING:
                     Console.WriteLine("[HostServer] PING recieved from " + data[1]);
-                    server.GetStream(data[1]).Write(data, 0, data.Length);
+                    server.GetStream((byte)(data[1] - 1)).Write(data, 0, data.Length);
                     break;
                 case MOVE:
                     Console.WriteLine("[HostServer] MOVE recieved");
@@ -90,6 +90,7 @@ namespace TCPTest.Server
         private void Disconnected(object sender, byte clientID)
         {
             Console.WriteLine("[HostServer] Client "+ clientID+" Disconnected");
+            
         }
 
         private void Connected(object sender, byte id)

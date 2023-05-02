@@ -12,8 +12,7 @@ namespace TCPTest.Client
     public class LocalClient
     {
         public bool connected = false;
-        private bool pingON = false;
-        private TaskCompletionSource<bool> ping;
+        public long ping = 0;
 
         private BaseClient client;
 
@@ -49,12 +48,19 @@ namespace TCPTest.Client
         public LocalClient(string ip) 
         {
             client = new BaseClient();
+            client.DataRecievedEvent += DataRecived;
+            client.ClientDisconnectedEvent += Disconnected;
             client.ConnectToServer(ip, 1404);
             connected = true;
             Console.WriteLine("[LocalClient] Connected to server successfully");
-            client.DataRecievedEvent += DataRecived;
+            
 
-            new Thread(PingThread).Start();
+            
+        }
+
+        private void Disconnected(object sender)
+        {
+            this.Disconnect();
         }
 
         private void DataRecived(object sender, byte[] data, NetworkStream stream)
@@ -62,8 +68,9 @@ namespace TCPTest.Client
             switch (data[0])
             {
                 case PING:
-                    Console.WriteLine("[LocalClient] Ping Sent Back");
-                    ping.SetResult(true);
+                    client.SendDataToServer(data);
+                    Console.WriteLine("[LocalClient] Ping Recieved");
+                    ping = (data[1] << 24) + (data[2] << 16) + (data[3] << 8) + data[4];
                     break;
                 case ABOUT_TO_LAUNCH: 
                     Console.WriteLine("[LocalClient] ABOUT_TO_LAUNCH recieved");
@@ -75,8 +82,10 @@ namespace TCPTest.Client
                     Console.WriteLine("[LocalClient] LAUNCH recieved");
                     break;
                 case SET_CLIENT_OR_ENTITY_ID:
-                    Console.WriteLine("[LocalClient] SET_CLIENT_OR_ENTITY_ID recieved");
-                    pingON = true;
+                    Console.WriteLine("[LocalClient] SET_CLIENT_OR_ENTITY_ID recieved ; clientID : " + data[1] + "\tcharID : " + data[2]);
+                    this.clientID = data[1];
+                    if (data[2] != 0) this.players[clientID - 1].characterID = data[2];
+                    
                     break;
                 case SEND_NAME_LIST:
                     Console.WriteLine("[LocalClient] SEND_NAME_LIST recieved");
@@ -113,40 +122,10 @@ namespace TCPTest.Client
         }
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
         //Menu
-        public void Disconnect() { client.Disconnect(); connected = false; }
+        public void Disconnect() { client.Disconnect(); connected = false; Console.WriteLine("[LocalClient] Disconected"); }
 
 
 
-        //Ping
-        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
-        private async void PingThread()
-        {
-            while (true)
-            {
-                Thread.Sleep(1000);
-             
-                if(pingON)
-                {
-                    Stopwatch pingTime = new Stopwatch();
-                    ping = new TaskCompletionSource<bool>();
-                    pingTime.Start();
-                    client.SendDataToServer(new byte[] { PING, this.clientID });
-                    new Thread(TimeoutThread).Start();
-                    if (await ping.Task)
-                    {
-                        pingTime.Stop();
-                        Console.WriteLine("[LocalClient] Ping : " + pingTime.ElapsedMilliseconds);
-                    }
-                    else Console.WriteLine("[LocalClient] Ping lost");
-                }
-            }
-        }
-        private void TimeoutThread()
-        {
-            Thread.Sleep(500);
-            ping.TrySetResult(false);
-        }
-        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
-        //Ping
+        
     }
 }
