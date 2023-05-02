@@ -42,7 +42,7 @@ namespace TCPTest
                             continue;
                         }
 
-                        while (input != "X")
+                        while ((input != "X")||(input != "x"))
                         {
                             Console.WriteLine("Enter \"X\" to disconnect\nEnter \"N\" to input a name");
                             input = Console.ReadLine();
@@ -50,7 +50,7 @@ namespace TCPTest
                             {
                                 Console.WriteLine("Enter your name");
                                 string name = Console.ReadLine();
-                                if (name != "") client.ChangeName(name);
+                                if (name != "" && name.Length <= 20) client.ChangeName(name);
                             }
                         }
 
