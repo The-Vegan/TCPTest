@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TCPTest.Client;
 using TCPTest.Server;
@@ -34,7 +35,7 @@ namespace TCPTest
                             Console.WriteLine("Enter IP");
                             input = Console.ReadLine();
                             client = new LocalClient(input);
-                            client.UpdateNameListInMenu += PrintPlayerList;
+                            
                         }
                         catch (Exception)
                         {
@@ -42,18 +43,32 @@ namespace TCPTest
                             continue;
                         }
 
-                        while ((input != "X")||(input != "x"))
+                        while ((input != "X")&&(input != "x"))
                         {
-                            Console.WriteLine("Enter \"X\" to disconnect\nEnter \"N\" to input a name");
+                            Console.WriteLine("Enter \"X\" to disconnect\nEnter \"N\" to input a name\nEnter \"L\" to print player list\nEnter \"P\" to check ping");
                             input = Console.ReadLine();
-                            if(input == "n" || input == "N")
+                            switch (input)
                             {
-                                Console.WriteLine("Enter your name");
-                                string name = Console.ReadLine();
-                                if (name != "" && name.Length <= 20) client.ChangeName(name);
+                                case "n":
+                                case "N":
+                                    Console.WriteLine("Enter your name");
+                                    string name = Console.ReadLine();
+                                    if (name != "" && name.Length <= 20) client.SendCharIDAndName(name);
+                                    break;
+                                case "l":
+                                case "L":
+                                    client.PrintPlayerList();
+                                    break;
+                                case "p":
+                                case "P":
+                                    client.pingPrint = true;
+                                    Thread.Sleep(1000);
+                                    break;
+
                             }
                         }
 
+                        client.Disconnect();
 
 
                         break;
@@ -75,15 +90,6 @@ namespace TCPTest
             }
 
 
-        }
-
-        private static void PrintPlayerList(PlayerInfo[] players)
-        {
-            for (byte i = 0; i < players.Length; i++)
-            {
-                if (players[i].name == null) Console.WriteLine((i + 1) + " : not connected");
-                else Console.WriteLine((i + 1) + " : " + players[i].name);
-            }
         }
     }
 }

@@ -53,6 +53,8 @@ namespace TCPTest.Server
                     streams[i].Close();
                     streams[i] = null;
                 }
+                listener.Stop();
+                
             }
         }
         private void ListeningThread()

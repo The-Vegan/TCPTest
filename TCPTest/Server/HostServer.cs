@@ -23,8 +23,6 @@ namespace TCPTest.Server
             server.ClientDisconnectedEvent += Disconnected;
             server.DataRecievedEvent += DataRecieved;
 
-            for(byte i = 0; i < players.Length; i++) players[i] = new PlayerInfo();  
-
         }
         //Packet Constants
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
@@ -57,7 +55,6 @@ namespace TCPTest.Server
         private void DataRecieved(object sender, byte[] data, NetworkStream stream)
         {
             if (server.GetStream((byte)(data[1] - 1)) != stream) Console.WriteLine("[HostServer] Stream doesn't match with corresponding ID : " + data[1]);
-
             switch (data[0]) 
             {
                 case PING:
@@ -68,15 +65,18 @@ namespace TCPTest.Server
                     Console.WriteLine("[HostServer] MOVE recieved");
                     break;
                 case SET_CHARACTER:
-                    Console.WriteLine("[HostServer] SET_CHARACTER recieved");
-
                     byte id = data[1];
-                    players[id - 1].clientID = id;
+                    if (players[id - 1] == null) 
+                    {
+                        Console.WriteLine("[HostServer] Client is null server side");
+                        break;
+                    }
+                    players[id - 1].clientID = data[1];
                     players[id - 1].characterID = data[2];
                     byte nameLength = (byte)(data[3] * 2);
                     string name = Encoding.Unicode.GetString(data, 4, nameLength);
                     players[id - 1].name = name;
-
+                    UpdateNameList();
                     break;
                     
             }
@@ -84,12 +84,16 @@ namespace TCPTest.Server
 
         private void UpdateNameList()
         {
-
+            byte[] output = PlayerInfo.SerialiseInfoArray(players);
+            server.SendDataOnAllStreams(output);
         }
 
         private void Disconnected(object sender, byte clientID)
         {
             Console.WriteLine("[HostServer] Client "+ clientID+" Disconnected");
+            players[clientID - 1] = null;
+            UpdateNameList();
+            GC.Collect();
             
         }
 
@@ -100,7 +104,12 @@ namespace TCPTest.Server
             output[0] = SET_CLIENT_OR_ENTITY_ID;
             output[1] = id;
 
+            players[id - 1] = new PlayerInfo();
+            players[id - 1].clientID = id;
+            players[id - 1].characterID= 0;
+
             server.SendDataOnSingleStream(output, id);
+            UpdateNameList();
         }
     }
 }

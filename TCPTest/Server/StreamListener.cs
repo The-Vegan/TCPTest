@@ -43,15 +43,10 @@ namespace TCPTest.Server
             {
                 try
                 {
-
                     int lu = stream.Read(buffer, 0, buffer.Length);
-                    if (lu == 0)
-                    {
-                        continue;
-                    }
-                    if (buffer[0] == 0) ping.SetResult(true);
+                    if (lu == 0) { continue; }
+                    if (buffer[0] == 0) try { ping.SetResult(true); } catch (InvalidOperationException) { }
                     else DataRecievedEvent(this, buffer, stream);
-
                 }
                 catch
                 {
@@ -77,7 +72,8 @@ namespace TCPTest.Server
 
         private async void PingThread()
         {
-            while (true)
+            byte lostPings = 0;
+            while (lostPings < 10)
             {
                 Thread.Sleep(1000);
 
@@ -87,30 +83,44 @@ namespace TCPTest.Server
                 pingTime.Start();
                 try 
                 {
-                    stream.Write(new byte[]{ 
+                        stream.Write(new byte[]{
                         0,//Ping protocol
                         (byte)(lastPing >> 24),
                         (byte)(lastPing >> 16),
                         (byte)(lastPing >> 8),
                         (byte)lastPing },
-                    0,
-                    5);
-                } catch (ObjectDisposedException) { break; }
+                        0,
+                        5);
+                    
+                } catch (Exception e) 
+                { 
+                    Console.WriteLine("[StreamListener] Exception caught : " + e);
+                    break; 
+                }
                 
                 new Thread(TimeoutThread).Start();
                 if (await ping.Task)
                 {
                     pingTime.Stop();
+                    lostPings = 0;
                     lastPing = pingTime.ElapsedMilliseconds;
                 }
-                else Console.WriteLine("[StreamListener] Ping lost");
+                else
+                {
+                    lostPings++;
+                    Console.WriteLine("[StreamListener] lost " + lostPings);
+                }
 
             }
+            DisconnectedEvent(this);
+            stream.Close();
+            stream.Dispose();
+
         }
         private void TimeoutThread()
         {
-            Thread.Sleep(500);
-            ping.TrySetResult(false);
+            Thread.Sleep(1000);
+            if (ping.TrySetResult(false)) Console.WriteLine("[StreamListener] Ping lost"); ;
         }
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
         //Ping
