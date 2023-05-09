@@ -25,7 +25,7 @@ namespace TCPTest.Client
             }
             else
             {
-                stream = new byte[4 + (this.name.Length * 2)];
+                stream = new byte[3 + (this.name.Length * 2)];
                 stream[0] = this.clientID;
                 stream[1] = this.characterID;
                 stream[2] = (byte)this.name.Length;
@@ -71,13 +71,10 @@ namespace TCPTest.Client
                 PlayerInfo player = new PlayerInfo();
 
                 player.clientID = data[offset];
-                Console.WriteLine(player.clientID);
                 offset++;
                 player.characterID = data[offset];
-                Console.WriteLine(player.characterID);
                 offset++;
                 byte nameLength = data[offset];
-                Console.WriteLine(nameLength);
                 offset++;
                 if (nameLength != 0) player.name = Encoding.Unicode.GetString(data, offset, nameLength * 2);
                 offset += (ushort)(nameLength * 2);

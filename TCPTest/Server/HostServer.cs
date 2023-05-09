@@ -55,6 +55,7 @@ namespace TCPTest.Server
         private void DataRecieved(object sender, byte[] data, NetworkStream stream)
         {
             if (server.GetStream((byte)(data[1] - 1)) != stream) Console.WriteLine("[HostServer] Stream doesn't match with corresponding ID : " + data[1]);
+            Console.WriteLine("[HostServer] Recieved data from client " + data[1]);
             switch (data[0]) 
             {
                 case PING:

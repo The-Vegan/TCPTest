@@ -62,7 +62,11 @@ namespace TCPTest.Client
                     stream.Read(buffer, 0, buffer.Length);
                     DataRecievedEvent(this, buffer, stream);
                 }
-                catch (Exception) { connected = false; }
+                catch (Exception e) 
+                {
+                    Console.WriteLine("[BaseClient] Disconnecting, Exeption caught : " + e);
+                    connected = false; 
+                }
 
             }
             ClientDisconnectedEvent(this);

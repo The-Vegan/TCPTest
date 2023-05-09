@@ -45,7 +45,7 @@ namespace TCPTest.Server
                 {
                     int lu = stream.Read(buffer, 0, buffer.Length);
                     if (lu == 0) { continue; }
-                    if (buffer[0] == 0) try { ping.SetResult(true); } catch (InvalidOperationException) { }
+                    if (buffer[0] == 0) try { ping.SetResult(true); } catch (InvalidOperationException) { Console.WriteLine("[StreamListener] Ping recieved out of cooldown"); }
                     else DataRecievedEvent(this, buffer, stream);
                 }
                 catch
@@ -94,7 +94,7 @@ namespace TCPTest.Server
                     
                 } catch (Exception e) 
                 { 
-                    Console.WriteLine("[StreamListener] Exception caught : " + e);
+                    Console.WriteLine("[StreamListener] Terminating Stream, Exception caught : " + e);
                     break; 
                 }
                 
@@ -108,6 +108,7 @@ namespace TCPTest.Server
                 else
                 {
                     lostPings++;
+                    lastPing = lostPings * 1000;
                     Console.WriteLine("[StreamListener] lost " + lostPings);
                 }
 
@@ -119,7 +120,7 @@ namespace TCPTest.Server
         }
         private void TimeoutThread()
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
             if (ping.TrySetResult(false)) Console.WriteLine("[StreamListener] Ping lost"); ;
         }
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\\
